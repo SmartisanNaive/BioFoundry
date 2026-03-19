@@ -1,6 +1,6 @@
 # Biofoundry_CLI
 
-[English](./README.md) | [中文](./README_zh.md)
+English | [中文](./README_zh.md)
 
 Biofoundry_CLI is a terminal-first software engineering agent. It can read and edit code, run shell commands, work with MCP servers, and operate in interactive shell, print, ACP, and wire modes.
 

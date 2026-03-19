@@ -1,6 +1,6 @@
 # BioFoundry Agent Skills
 
-[English](./README.md) | [中文](./README_zh.md)
+[English](./README.md) | 中文
 
 本目录包含一套 Claude Code skills，旨在实现论文 *"Autonomous biofoundry reveals hierarchical epistasis emergence from enzyme to pathway"* 中描述的自主生物铸造厂代理架构。
 

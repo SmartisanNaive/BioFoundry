@@ -1,6 +1,6 @@
 # Biofoundry_CLI
 
-[English](./README.md) | [中文](./README_zh.md)
+[English](./README.md) | 中文
 
 Biofoundry_CLI 是一个以终端为中心的软件工程代理。它可以读取和编辑代码、执行 shell 命令、接入 MCP 服务器，并支持交互式 shell、print、ACP 和 wire 模式。
 
