@@ -1,0 +1,50 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Project files
+.vscode
+.env
+.env.local
+/tests_local
+uv.toml
+.idea/*
+
+# Build dependencies
+src/biofoundry_cli/deps/bin
+src/biofoundry_cli/deps/tmp
+
+# Web build artifacts
+src/biofoundry_cli/web/static/assets/
+
+# Vis build artifacts
+src/biofoundry_cli/vis/static/
+
+# Generated reports
+tests_ai/report.json
+
+# nix build result
+result
+result-*
+
+# macOS files
+.DS_Store
+
+# Rust files
+target/
+
+node_modules/
+static/
+.memo/
+.entire
+.claude
+
+# Local Biofoundry state and secrets
+.biofoundry/

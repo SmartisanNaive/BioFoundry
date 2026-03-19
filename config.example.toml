@@ -1,0 +1,28 @@
+# Example configuration for Biofoundry_CLI.
+# The runtime config path is ~/.biofoundry/config.toml.
+# You can keep api_key empty here and provide OPENAI_API_KEY via environment variables.
+
+default_model = "openai-responses"
+default_thinking = false
+default_yolo = false
+default_editor = "code --wait"
+
+[models.openai-responses]
+provider = "openai-responses"
+model = "gpt-5"
+max_context_size = 100000
+
+[models.openai-legacy]
+provider = "openai-legacy"
+model = "gpt-4o"
+max_context_size = 100000
+
+[providers.openai-responses]
+type = "openai_responses"
+base_url = "https://api.openai.com/v1"
+api_key = ""
+
+[providers.openai-legacy]
+type = "openai_legacy"
+base_url = "https://api.openai.com/v1"
+api_key = ""

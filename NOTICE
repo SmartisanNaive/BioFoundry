@@ -1,0 +1,11 @@
+Biofoundry_CLI
+Copyright 2025 Biofoundry_CLI contributors
+
+The Biofoundry_CLI project contains or reuses code
+that is licensed under the Apache 2.0 license from the following projects:
+- OpenAI Codex (https://github.com/openai/codex)
+
+  See: src/biofoundry_cli/skills/skill-creator/SKILL.md
+
+OpenAI Codex
+Copyright 2025 OpenAI

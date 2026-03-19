@@ -1,0 +1,18 @@
+version: 1
+agent:
+  extend: default
+  tools:
+    - "biofoundry_cli.tools.multiagent:Task"
+    # - "biofoundry_cli.tools.multiagent:CreateSubagent"
+    - "biofoundry_cli.tools.dmail:SendDMail"
+    # - "biofoundry_cli.tools.think:Think"
+    - "biofoundry_cli.tools.todo:SetTodoList"
+    - "biofoundry_cli.tools.shell:Shell"
+    - "biofoundry_cli.tools.file:ReadFile"
+    - "biofoundry_cli.tools.file:ReadMediaFile"
+    - "biofoundry_cli.tools.file:Glob"
+    - "biofoundry_cli.tools.file:Grep"
+    - "biofoundry_cli.tools.file:WriteFile"
+    - "biofoundry_cli.tools.file:StrReplaceFile"
+    - "biofoundry_cli.tools.web:SearchWeb"
+    - "biofoundry_cli.tools.web:FetchURL"
