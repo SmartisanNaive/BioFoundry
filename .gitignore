@@ -45,6 +45,7 @@ static/
 .memo/
 .entire
 .claude
+.agents
 
 # Local Biofoundry state and secrets
 .biofoundry/
