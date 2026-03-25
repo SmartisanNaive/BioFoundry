@@ -2,7 +2,15 @@
 
 [English](./README.md) | 中文
 
-Biofoundry_CLI 是一个以终端为中心的软件工程代理。它可以读取和编辑代码、执行 shell 命令、接入 MCP 服务器，并支持交互式 shell、print、ACP 和 wire 模式。
+Biofoundry_CLI 是一个以terminal为核心的Agent工具，可以读取和编辑代码、执行 shell 命令、接入 MCP 服务器，并支持交互式 shell、print、ACP 和 wire 模式。
+## 特性
+
+- **以terminal为核心**：所有操作都在 terminal 中进行（即 CLI）。
+- **读取和编辑代码**：可以读取和编辑项目中的文本文件。
+- **执行 shell 命令**：可以在 terminal 中执行 shell 命令。
+- **接入 MCP 服务器**：可以连接到 MCP 服务器。
+- **print 模式**：可以打印执行结果，而不是直接在 terminal 中显示。
+- **ACP 模式**：可以在 terminal 中执行 ACP 命令，进行项目管理。
 
 ## 快速开始
 
@@ -16,9 +24,7 @@ uv run biofoundry
 
 ## 在其他工作目录中使用 Biofoundry_CLI
 
-你可以从当前仓库启动 Biofoundry_CLI，同时让它在另一个项目目录上工作。
-
-推荐的两种方式：
+在你的工作空间中使用 Biofoundry_CLI：
 
 1. 先切换到目标项目目录，再从本仓库运行 Biofoundry_CLI：
 
