@@ -49,3 +49,10 @@ static/
 
 # Local Biofoundry state and secrets
 .biofoundry/
+.alma-snapshots/
+
+# Local editor/context files and archived binary drops
+.zed/
+CLAUDE.md
+*.zip
+RhlA_NNK_Primer20200629最新.xlsx
