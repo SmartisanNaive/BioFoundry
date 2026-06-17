@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 import typer
+from loguru import logger
 
 from biofoundry_cli.constant import VERSION
 
@@ -275,6 +276,13 @@ def biofoundry(
             help="Path to the skills directory. Overrides discovery.",
         ),
     ] = None,
+    no_xingpan_mcp: Annotated[
+        bool,
+        typer.Option(
+            "--no-xingpan-mcp",
+            help="Disable the built-in Xingpan MCP server auto-loading.",
+        ),
+    ] = False,
     # Loop control
     max_steps_per_turn: Annotated[
         int | None,
@@ -322,9 +330,9 @@ def biofoundry(
     from biofoundry_cli.exception import ConfigError
     from biofoundry_cli.metadata import load_metadata, save_metadata
     from biofoundry_cli.session import Session
-    from biofoundry_cli.utils.logging import logger, open_original_stderr, redirect_stderr_to_logger
+    from biofoundry_cli.utils.logging import open_original_stderr, redirect_stderr_to_logger
 
-    from .mcp import get_global_mcp_config_file
+    from .mcp import get_global_mcp_config_file, merge_builtin_mcp_configs
 
     # Don't redirect stderr yet. Our stderr redirector replaces fd=2 with a pipe, which
     # would swallow Click/Typer startup errors (e.g. config parsing / BadParameter).
@@ -454,6 +462,11 @@ def biofoundry(
         mcp_configs += [json.loads(conf) for conf in raw_mcp_config]
     except json.JSONDecodeError as e:
         raise typer.BadParameter(f"Invalid JSON: {e}", param_hint="--mcp-config") from e
+
+    mcp_configs = merge_builtin_mcp_configs(
+        mcp_configs,
+        disable_builtin_xingpan=no_xingpan_mcp,
+    )
 
     skills_dir: FoundryPath | None = None
     if local_skills_dir is not None:
@@ -641,6 +654,22 @@ def acp():
     from biofoundry_cli.acp import acp_main
 
     acp_main()
+
+
+@cli.command("synpan-mcp")
+def synpan_mcp():
+    """Run the SynPan/CIAI MCP server on stdio."""
+    from biofoundry_cli.synpan.mcp_server import main
+
+    main()
+
+
+@cli.command("xingpan-mcp")
+def xingpan_mcp():
+    """Run the Xingpan MCP server on stdio."""
+    from biofoundry_cli.xingpan.mcp_server import main
+
+    main()
 
 
 cli.add_typer(export_cli, name="export")

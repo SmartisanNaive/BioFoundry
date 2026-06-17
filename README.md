@@ -139,6 +139,7 @@ flowchart LR
 - Runtime assembly injects the working directory, `AGENTS.md`, discovered skills, bundled knowledge, approvals, and subagent state into the loaded agent.
 - `BiofoundrySoul` is the main orchestration loop: it accepts user input, calls the LLM, executes tools, handles approvals, and emits wire messages.
 - Tool execution goes through the built-in toolset and optional MCP servers.
+- The CLI also ships built-in stdio MCP services such as `biofoundry synpan-mcp` and `biofoundry xingpan-mcp`; Xingpan auto-loads by default unless disabled with `--no-xingpan-mcp`.
 - Shell, print, ACP, and wire frontends all consume the same wire/event stream, while session metadata and history are persisted under `.biofoundry/`.
 
 ## Core Modules

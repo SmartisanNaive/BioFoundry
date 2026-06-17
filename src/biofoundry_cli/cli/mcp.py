@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
@@ -78,6 +79,36 @@ def _parse_key_value_pairs(
 
 
 Transport = Literal["stdio", "http"]
+
+
+def build_builtin_xingpan_mcp_config() -> dict[str, Any]:
+    return {
+        "mcpServers": {
+            "xingpan": {
+                "command": sys.executable,
+                "args": ["-m", "biofoundry_cli.cli", "xingpan-mcp"],
+            }
+        }
+    }
+
+
+def merge_builtin_mcp_configs(
+    mcp_configs: list[dict[str, Any]], *,
+    disable_builtin_xingpan: bool = False,
+) -> list[dict[str, Any]]:
+    if disable_builtin_xingpan:
+        return mcp_configs
+
+    has_xingpan = False
+    for config in mcp_configs:
+        servers = config.get("mcpServers", {})
+        if isinstance(servers, dict) and "xingpan" in servers:
+            has_xingpan = True
+            break
+
+    if has_xingpan:
+        return mcp_configs
+    return [*mcp_configs, build_builtin_xingpan_mcp_config()]
 
 
 @cli.command(
