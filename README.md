@@ -1,10 +1,10 @@
 # Biofoundry_CLI
 
-English | [中文](./README_zh.md)
+中文 | [English](./README.en.md)
 
-Biofoundry_CLI is a terminal-first software engineering agent. It can read and edit code, run shell commands, work with MCP servers, and operate in interactive shell, print, ACP, and wire modes.
+Biofoundry_CLI 是一个面向生物制造与合成生物学场景的终端优先型软件工程 Agent。它可以读取和编辑代码、执行 shell 命令、调用 MCP 服务器，并支持交互式 shell、print、ACP 和 wire 多种模式。
 
-## Quick Start
+## 快速开始
 
 ```sh
 mkdir -p .biofoundry
@@ -14,20 +14,20 @@ make prepare
 uv run biofoundry
 ```
 
-## Use Biofoundry_CLI From Another Working Directory
+## 在其它工作目录中使用
 
-Biofoundry_CLI can be executed from this repository while operating on a different project directory.
+Biofoundry_CLI 可以安装在本仓库，但操作另一个项目目录。
 
-Recommended workflows:
+推荐用法：
 
-1. Change into the target project directory first, then run Biofoundry_CLI from this repo:
+1. 先进入目标项目目录，再从本仓库启动：
 
 ```sh
 cd /path/to/target-project
 uv run --project /path/to/RhlA_Agent_CLI biofoundry
 ```
 
-2. Keep your current shell where it is and ask `uv` to launch from the target project directory:
+2. 保持当前 shell 位置不变，显式指定目标目录：
 
 ```sh
 uv run \
@@ -36,14 +36,14 @@ uv run \
   biofoundry
 ```
 
-How config and session storage work:
+配置与会话存储规则：
 
-- By default, Biofoundry_CLI stores runtime state under `.biofoundry/` in the detected startup project root.
-- In the two workflows above, that means `.biofoundry/` and `config.toml` live under `/path/to/target-project`.
-- `--work-dir` changes the agent's workspace, but it does not move the default config or session storage location by itself.
-- If you need to pin those paths explicitly, use `--config-file /path/to/config.toml` and/or set `BIOFOUNDRY_SHARE_DIR=/path/to/.biofoundry`.
+- 默认把运行时状态放在启动时检测到的项目根目录下的 `.biofoundry/`。
+- 上面两种用法意味着 `.biofoundry/` 和 `config.toml` 都落在 `/path/to/target-project` 下。
+- `--work-dir` 只改变 agent 工作区，不会单独移动默认配置或会话存储位置。
+- 如需固定路径，使用 `--config-file /path/to/config.toml` 和/或 `BIOFOUNDRY_SHARE_DIR=/path/to/.biofoundry`。
 
-Example of an explicit workspace override:
+显式覆盖工作区示例：
 
 ```sh
 uv run --project /path/to/RhlA_Agent_CLI \
@@ -52,18 +52,18 @@ uv run --project /path/to/RhlA_Agent_CLI \
   --config-file /path/to/target-project/.biofoundry/config.toml
 ```
 
-## Configuration
+## 配置
 
-Biofoundry_CLI uses `.biofoundry/config.toml` in the startup project root as its runtime config file. A ready-to-edit example is included at [`config.example.toml`](./config.example.toml).
+Biofoundry_CLI 默认使用启动项目根目录下的 `.biofoundry/config.toml`。模板见 [`config.example.toml`](./config.example.toml)。
 
-The CLI requires this file to exist before startup and does not auto-create it.
+启动前该文件必须已存在，CLI 不会自动创建。
 
-The default setup keeps both OpenAI SDK paths available:
+默认同时保留两条 OpenAI SDK 路径：
 
 - `openai_responses`
 - `openai_legacy`
 
-Example environment setup:
+环境变量示例：
 
 ```sh
 export OPENAI_API_KEY="sk-..."
@@ -72,7 +72,7 @@ export OPENAI_MODEL_NAME="gpt-5"
 uv run biofoundry
 ```
 
-Example config:
+配置文件示例：
 
 ```toml
 default_model = "openai-responses"
@@ -99,14 +99,25 @@ base_url = "https://api.openai.com/v1"
 api_key = ""
 ```
 
-Notes:
+说明：
 
-- `api_key = ""` is valid when `OPENAI_API_KEY` is provided via environment variables.
-- `OPENAI_MODEL_NAME` overrides the selected model name at runtime.
-- Use `/model` in shell mode to switch between configured models.
-- The CLI no longer includes a built-in `/login` or account login flow.
+- 当通过环境变量提供 `OPENAI_API_KEY` 时，`api_key = ""` 是合法的。
+- `OPENAI_MODEL_NAME` 会在运行时覆盖当前选中的模型名。
+- shell 模式中可用 `/model` 切换已配置模型。
+- CLI 不再内置 `/login` 或账号登录流程。
 
-## Common Commands
+## 核心能力
+
+- **代码读写与编辑**：读取文本文件、批量修改、Diff 审查。
+- **Shell 执行**：在终端中运行命令并解析输出。
+- **Web 搜索与抓取**：内置搜索与 URL 抓取工具。
+- **MCP 服务器**：可接入外部 MCP server；也内置 `biofoundry synpan-mcp` 作为 stdio MCP 服务，默认自动加载，可用 `--no-synpan-mcp` 关闭。
+- **多模式运行**：interactive shell、print、ACP、wire。
+- **内置 Skills 与领域知识**：`Knowledge/` 目录下随附 Biofoundry 相关 skills，支持自动发现。
+- **Sanger 测序分析**：`biofoundry_cli.tools.sanger.SangerAlign` 工具，用于序列比对和预期突变校验。
+- **SynPan 设备驱动与平台接入**：统一在 `biofoundry_cli.synpan` 下，同时支持 CIAI 设备端点（`/Info`、`/Function`、`/Set` 等）和第三方工艺平台端点（workcell、craft、materiel、data、order）。
+
+## 常用命令
 
 ```sh
 biofoundry --help
@@ -115,44 +126,59 @@ biofoundry --work-dir /path/to/project
 biofoundry acp
 biofoundry mcp list
 biofoundry --mcp-config-file /path/to/mcp.json
+biofoundry synpan-mcp   # 统一 SynPan MCP server
 ```
 
-## Architecture Overview
+## 架构概览
 
 ```mermaid
 flowchart LR
-    CLI["CLI entry<br/>flags and UI mode"] --> Create["BiofoundryCLI.create"]
-    Create --> Config["Config and model selection"]
-    Create --> Session["Session and work directory state"]
-    Create --> Runtime["Runtime assembly"]
-    Runtime --> Specs["Agent spec, prompts, built-in args"]
-    Runtime --> Skills["Skills and bundled knowledge discovery"]
-    Specs --> Soul["BiofoundrySoul main loop"]
+    CLI["CLI 入口<br/>参数与 UI 模式"] --> Create["BiofoundryCLI.create"]
+    Create --> Config["配置与模型选择"]
+    Create --> Session["会话与工作目录状态"]
+    Create --> Runtime["运行时装配"]
+    Runtime --> Specs["Agent spec、prompts、built-in args"]
+    Runtime --> Skills["skills 与内置知识发现"]
+    Specs --> Soul["BiofoundrySoul 主循环"]
     Skills --> Soul
-    Soul --> Toolset["Built-in tools and MCP toolset"]
-    Soul --> Wire["Wire events and session logs"]
-    Wire --> UI["Shell / Print / ACP / Wire frontends"]
+    Soul --> Toolset["内置工具与 MCP toolset"]
+    Soul --> Wire["Wire 事件与会话日志"]
+    Wire --> UI["Shell / Print / ACP / Wire 前端"]
 ```
 
-- The CLI layer parses flags such as `--work-dir`, `--config-file`, UI mode selection, MCP config, and session controls.
-- `BiofoundryCLI.create` loads configuration, resolves the model/provider, restores the session context, and builds the runtime.
-- Runtime assembly injects the working directory, `AGENTS.md`, discovered skills, bundled knowledge, approvals, and subagent state into the loaded agent.
-- `BiofoundrySoul` is the main orchestration loop: it accepts user input, calls the LLM, executes tools, handles approvals, and emits wire messages.
-- Tool execution goes through the built-in toolset and optional MCP servers.
-- The CLI also ships a built-in stdio MCP service `biofoundry synpan-mcp` that exposes both the SynPan/CIAI device driver and the SynPan third-party platform; it auto-loads by default unless disabled with `--no-synpan-mcp`.
-- Shell, print, ACP, and wire frontends all consume the same wire/event stream, while session metadata and history are persisted under `.biofoundry/`.
+- CLI 层解析 `--work-dir`、`--config-file`、UI 模式、MCP 配置和会话控制等参数。
+- `BiofoundryCLI.create` 加载配置、解析模型与 provider、恢复会话上下文并构建运行时。
+- 运行时装配注入工作目录、`AGENTS.md`、已发现 skills、内置知识、审批状态和子代理状态。
+- `BiofoundrySoul` 是主编排循环：接收输入、调用 LLM、执行工具、处理审批、发出 wire 消息。
+- 工具执行支持内置 toolset 与可选 MCP 服务器。
+- 四类前端共享同一条 wire/event 流，会话元数据与历史持久化到 `.biofoundry/`。
 
-## Core Modules
+## 核心模块
 
-- `src/biofoundry_cli/cli/`: CLI flags, subcommands, and UI mode selection.
-- `src/biofoundry_cli/app.py`: top-level app construction and runtime bootstrap.
-- `src/biofoundry_cli/soul/`: main agent loop, runtime state, approvals, context, and compaction.
-- `src/biofoundry_cli/tools/`: built-in shell, file, web, planning, and multiagent tools.
-- `src/biofoundry_cli/ui/`: shell, print, and ACP frontends.
-- `src/biofoundry_cli/wire/`: event protocol and streaming transport between soul and UI.
-- `Knowledge/`: bundled domain knowledge and packaged Biofoundry skills.
+- `src/biofoundry_cli/cli/`：CLI 参数、子命令与 UI 模式选择。
+- `src/biofoundry_cli/app.py`：顶层应用构建与运行时启动。
+- `src/biofoundry_cli/soul/`：主 agent 循环、运行时状态、审批、上下文和压缩。
+- `src/biofoundry_cli/tools/`：内置 shell、file、web、plan、multiagent、sanger 等工具。
+- `src/biofoundry_cli/ui/`：shell、print、ACP 前端。
+- `src/biofoundry_cli/wire/`：soul 与 UI 之间的事件协议和流传输。
+- `src/biofoundry_cli/synpan/`：统一的 SynPan CIAI 设备驱动与第三方工艺平台适配。
+- `Knowledge/`：内置领域知识与打包随附的 Biofoundry skills。
 
-## Development
+## SynPan MCP 适配
+
+`biofoundry synpan-mcp` 启动一个统一的 stdio MCP server，同时暴露两类工具：
+
+- **CIAI 设备端点**：`synpan_get_info`、`synpan_run_function`、`synpan_set_parameters` 等。
+- **第三方工艺平台**：`getWorkCellList`、`getCraftList`、`createOrder`、`operateOrder` 等。
+
+环境变量：
+
+- CIAI 驱动：`SYNPAN_BASE_URL`、`SYNPAN_TOKEN`、`SYNPAN_TIMEOUT_SECONDS` 等。
+- 第三方平台：`SYNPAN_PLATFORM_BASE_URL`、`SYNPAN_PLATFORM_TOKEN`、`SYNPAN_PLATFORM_TIMEOUT_MS`；旧版 `XINGPAN_*` 仍作为兼容 fallback。
+
+详见 [`docs/synpan-mcp.md`](./docs/synpan-mcp.md)。
+
+## 开发
 
 ```sh
 make prepare
@@ -163,8 +189,8 @@ make build
 make build-bin
 ```
 
-## Notes
+## 备注
 
-- The default CLI command is `biofoundry`.
-- ACP clients should invoke `biofoundry acp`.
-- The package metadata continues to use this English README as the default project readme.
+- 默认 CLI 命令为 `biofoundry`。
+- ACP 客户端应调用 `biofoundry acp`。
+- 本 README 为中文版；英文版见 [`README.en.md`](./README.en.md)。
