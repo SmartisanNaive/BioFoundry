@@ -7,12 +7,12 @@ from typing import Any, cast
 import httpx
 
 from biofoundry_cli.constant import USER_AGENT
-from biofoundry_cli.xingpan.models import JsonObject, XingpanResponse
+from biofoundry_cli.synpan.platform_models import JsonObject, SynPanPlatformResponse
 
 DEFAULT_TIMEOUT_MS = 30000.0
 
 
-class XingpanClient:
+class SynPanPlatformClient:
     PATHS = {
         "addCraft": "/thirdParty/mcp/addCraft",
         "updateCraft": "/thirdParty/mcp/updateCraft",
@@ -52,21 +52,34 @@ class XingpanClient:
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self._env = env if env is not None else os.environ
-        env_base_url = base_url if base_url is not None else self._env.get("XINGPAN_BASE_URL")
+        env_base_url = (
+            base_url
+            if base_url is not None
+            else _env_with_fallback(self._env, "SYNPAN_PLATFORM_BASE_URL", "XINGPAN_BASE_URL")
+        )
         self._base_url = _normalize_base_url(env_base_url)
-        self._token = token if token is not None else self._env.get("XINGPAN_TOKEN")
+        self._token = (
+            token
+            if token is not None
+            else _env_with_fallback(self._env, "SYNPAN_PLATFORM_TOKEN", "XINGPAN_TOKEN")
+        )
         self._transport = transport
         self._configuration_error: str | None = None
         try:
             self._timeout_ms = (
                 timeout_ms
                 if timeout_ms is not None
-                else _parse_timeout(self._env.get("XINGPAN_TIMEOUT"))
+                else _parse_timeout(
+                    _env_with_fallback(self._env, "SYNPAN_PLATFORM_TIMEOUT_MS", "XINGPAN_TIMEOUT")
+                )
             )
         except ValueError as exc:
             self._timeout_ms = DEFAULT_TIMEOUT_MS
             self._configuration_error = str(exc)
-        self._verbose = _parse_bool(self._env.get("XINGPAN_VERBOSE"), default=False)
+        self._verbose = _parse_bool(
+            _env_with_fallback(self._env, "SYNPAN_PLATFORM_VERBOSE", "XINGPAN_VERBOSE"),
+            default=False,
+        )
 
     async def post(
         self,
@@ -74,19 +87,23 @@ class XingpanClient:
         body: Any | None = None,
         *,
         base_url: str | None = None,
-    ) -> XingpanResponse:
+    ) -> SynPanPlatformResponse:
         if self._configuration_error is not None:
-            return XingpanResponse.error(self._configuration_error, error_type="configuration")
+            return SynPanPlatformResponse.error(
+                self._configuration_error, error_type="configuration"
+            )
 
         target_base_url = _normalize_base_url(base_url) if base_url is not None else self._base_url
         if not target_base_url:
-            return XingpanResponse.error(
-                "Xingpan base URL is not configured. Set XINGPAN_BASE_URL or pass base_url.",
+            return SynPanPlatformResponse.error(
+                "SynPan platform base URL is not configured. "
+                "Set SYNPAN_PLATFORM_BASE_URL (or XINGPAN_BASE_URL as a fallback).",
                 error_type="configuration",
             )
         if not self._token:
-            return XingpanResponse.error(
-                "Xingpan token is not configured. Set XINGPAN_TOKEN.",
+            return SynPanPlatformResponse.error(
+                "SynPan platform token is not configured. "
+                "Set SYNPAN_PLATFORM_TOKEN (or XINGPAN_TOKEN as a fallback).",
                 error_type="configuration",
             )
 
@@ -102,9 +119,13 @@ class XingpanClient:
                     json=body if body is not None else {},
                 )
         except httpx.TimeoutException as exc:
-            return XingpanResponse.error(f"Xingpan request timed out: {exc}", error_type="timeout")
+            return SynPanPlatformResponse.error(
+                f"SynPan platform request timed out: {exc}", error_type="timeout"
+            )
         except httpx.RequestError as exc:
-            return XingpanResponse.error(f"Xingpan request failed: {exc}", error_type="network")
+            return SynPanPlatformResponse.error(
+                f"SynPan platform request failed: {exc}", error_type="network"
+            )
 
         return _response_from_httpx(response)
 
@@ -118,20 +139,24 @@ class XingpanClient:
         return headers
 
 
-def _response_from_httpx(response: httpx.Response) -> XingpanResponse:
+def _env_with_fallback(env: Mapping[str, str], primary: str, fallback: str) -> str | None:
+    return env.get(primary) or env.get(fallback) or None
+
+
+def _response_from_httpx(response: httpx.Response) -> SynPanPlatformResponse:
     raw: Any
     try:
         raw = response.json()
     except ValueError:
         raw = response.text
         if response.is_success:
-            return XingpanResponse.error(
-                "Xingpan response was not valid JSON.",
+            return SynPanPlatformResponse.error(
+                "SynPan platform response was not valid JSON.",
                 error_type="invalid_json",
                 http_status=response.status_code,
                 raw=raw,
             )
-        return XingpanResponse.error(
+        return SynPanPlatformResponse.error(
             _message_from_raw(raw) or response.reason_phrase,
             error_type="http",
             http_status=response.status_code,
@@ -144,7 +169,7 @@ def _response_from_httpx(response: httpx.Response) -> XingpanResponse:
     message = _message_from_raw(raw) or "Success"
 
     if not response.is_success:
-        return XingpanResponse.error(
+        return SynPanPlatformResponse.error(
             message,
             error_type="http",
             http_status=response.status_code,
@@ -154,7 +179,7 @@ def _response_from_httpx(response: httpx.Response) -> XingpanResponse:
         )
 
     if isinstance(mapping.get("code"), int) and mapping["code"] not in {0, 200}:
-        return XingpanResponse.error(
+        return SynPanPlatformResponse.error(
             message,
             error_type="biz",
             http_status=response.status_code,
@@ -163,7 +188,7 @@ def _response_from_httpx(response: httpx.Response) -> XingpanResponse:
             data=data,
         )
     if mapping.get("success") is False:
-        return XingpanResponse.error(
+        return SynPanPlatformResponse.error(
             message,
             error_type="biz",
             http_status=response.status_code,
@@ -172,7 +197,7 @@ def _response_from_httpx(response: httpx.Response) -> XingpanResponse:
             data=data,
         )
 
-    return XingpanResponse(
+    return SynPanPlatformResponse(
         ok=True,
         http_status=response.status_code,
         code=code,
@@ -195,9 +220,9 @@ def _parse_timeout(value: str | None) -> float:
     try:
         timeout = float(value)
     except ValueError as exc:
-        raise ValueError("XINGPAN_TIMEOUT must be a number.") from exc
+        raise ValueError("SYNPAN_PLATFORM_TIMEOUT_MS must be a number.") from exc
     if timeout <= 0:
-        raise ValueError("XINGPAN_TIMEOUT must be greater than 0.")
+        raise ValueError("SYNPAN_PLATFORM_TIMEOUT_MS must be greater than 0.")
     return timeout
 
 

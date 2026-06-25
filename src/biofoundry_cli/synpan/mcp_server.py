@@ -12,14 +12,20 @@ from biofoundry_cli.synpan.models import (
     OperationRequest,
     SetParameter,
 )
+from biofoundry_cli.synpan.platform_client import SynPanPlatformClient
+from biofoundry_cli.synpan.platform_mcp_server import add_platform_tools
 
 
-def create_mcp_server(client: SynPanClient | None = None) -> FastMCP:
+def create_mcp_server(
+    client: SynPanClient | None = None,
+    platform_client: SynPanPlatformClient | None = None,
+) -> FastMCP:
     mcp = FastMCP(
-        "SynPan CIAI",
+        "SynPan",
         instructions=(
-            "Tools for calling SynPan/CIAI device driver endpoints: Info, HeartBeat, "
-            "Get, Function, Operation, Set, and EnterAndExit."
+            "Tools for the SynPan ecosystem: SynPan/CIAI device driver endpoints "
+            "(Info, HeartBeat, Get, Function, Operation, Set, EnterAndExit) and "
+            "SynPan third-party platform endpoints (workcells, craft, materiel, data, orders)."
         ),
     )
 
@@ -103,6 +109,8 @@ def create_mcp_server(client: SynPanClient | None = None) -> FastMCP:
     mcp.tool(synpan_run_operation)
     mcp.tool(synpan_set_parameters)
     mcp.tool(synpan_enter_and_exit)
+
+    add_platform_tools(mcp, platform_client)
 
     return mcp
 

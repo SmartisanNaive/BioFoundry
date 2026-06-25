@@ -4,8 +4,8 @@ from typing import Any, Literal
 
 from fastmcp import FastMCP
 
-from biofoundry_cli.xingpan.client import XingpanClient
-from biofoundry_cli.xingpan.models import JsonObject, XingpanResponse
+from biofoundry_cli.synpan.platform_client import SynPanPlatformClient
+from biofoundry_cli.synpan.platform_models import JsonObject, SynPanPlatformResponse
 
 
 def _dict_list(value: Any) -> list[JsonObject]:
@@ -14,7 +14,7 @@ def _dict_list(value: Any) -> list[JsonObject]:
     return [item for item in value if isinstance(item, dict)]
 
 
-async def _unwrap(response: XingpanResponse) -> JsonObject:
+async def _unwrap(response: SynPanPlatformResponse) -> JsonObject:
     return response.to_tool_result()
 
 
@@ -31,7 +31,7 @@ def _fill_from_craft_def(
 
 
 async def _resolve_data_input(
-    client: XingpanClient,
+    client: SynPanPlatformClient,
     work_cell_id: str,
     input_payload: JsonObject,
     data_type_map: dict[str, str],
@@ -42,7 +42,7 @@ async def _resolve_data_input(
         raise ValueError(f"未知数据类型：{input_kind}，请先调用 getDataTypeList 确认")
 
     existing = await client.post(
-        XingpanClient.PATHS["getDataObjectList"],
+        SynPanPlatformClient.PATHS["getDataObjectList"],
         {"workCellId": work_cell_id, "name": input_payload["inputName"]},
     )
     if existing.ok:
@@ -55,7 +55,7 @@ async def _resolve_data_input(
                 }
 
     created = await client.post(
-        XingpanClient.PATHS["addDataObject"],
+        SynPanPlatformClient.PATHS["addDataObject"],
         {
             "workCellId": work_cell_id,
             "name": input_payload["inputName"],
@@ -78,12 +78,12 @@ async def _resolve_data_input(
 
 
 async def _resolve_material_input(
-    client: XingpanClient,
+    client: SynPanPlatformClient,
     work_cell_id: str,
     input_payload: JsonObject,
 ) -> JsonObject:
     materials = await client.post(
-        XingpanClient.PATHS["getCraftMateriel"],
+        SynPanPlatformClient.PATHS["getCraftMateriel"],
         {"workCellId": work_cell_id},
     )
     if materials.ok:
@@ -100,7 +100,7 @@ async def _resolve_material_input(
     input_name = input_payload["inputName"]
     input_kind = input_payload["inputKind"]
     raise ValueError(
-        f"物料 \"{input_name}\"（类 {input_kind}）未找到，请先调用 addCraftMateriel 上料"
+        f'物料 "{input_name}"（类 {input_kind}）未找到，请先调用 addCraftMateriel 上料'
     )
 
 
@@ -131,87 +131,78 @@ def _fill_outputs(
     ]
 
 
-def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
-    mcp = FastMCP(
-        "Xingpan",
-        instructions=(
-            "Tools for calling Xingpan third-party endpoints for workcells, craft, "
-            "materiel, data, and orders."
-        ),
-    )
+def add_platform_tools(
+    mcp: FastMCP,
+    client: SynPanPlatformClient | None = None,
+) -> FastMCP:
+    def active_client() -> SynPanPlatformClient:
+        return client if client is not None else SynPanPlatformClient()
 
-    def active_client() -> XingpanClient:
-        return client if client is not None else XingpanClient()
-
-    @mcp.tool
     async def getWorkCellList() -> JsonObject:
-        return await _unwrap(await active_client().post(XingpanClient.PATHS["getWorkCellList"], {}))
+        return await _unwrap(
+            await active_client().post(SynPanPlatformClient.PATHS["getWorkCellList"], {})
+        )
 
-    @mcp.tool
     async def getWorkCell(workCellId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getWorkCell"],
+                SynPanPlatformClient.PATHS["getWorkCell"],
                 {"workCellId": workCellId},
             )
         )
 
-    @mcp.tool
     async def setWorkCell(workCellId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["setWorkCell"],
+                SynPanPlatformClient.PATHS["setWorkCell"],
                 {"workCellId": workCellId},
             )
         )
 
-    @mcp.tool
     async def checkWorkCellAuthority() -> JsonObject:
         return await _unwrap(
-            await active_client().post(XingpanClient.PATHS["checkWorkCellAuthority"], {})
+            await active_client().post(SynPanPlatformClient.PATHS["checkWorkCellAuthority"], {})
         )
 
-    @mcp.tool
     async def getCraftList(workCellId: str, userId: str | None = None) -> JsonObject:
         payload: JsonObject = {"workCellId": workCellId}
         if userId is not None:
             payload["userId"] = userId
-        return await _unwrap(await active_client().post(XingpanClient.PATHS["getList"], payload))
-
-    @mcp.tool
-    async def getCraft(craftId: str) -> JsonObject:
         return await _unwrap(
-            await active_client().post(XingpanClient.PATHS["getCraft"], {"craftId": craftId})
+            await active_client().post(SynPanPlatformClient.PATHS["getList"], payload)
         )
 
-    @mcp.tool
+    async def getCraft(craftId: str) -> JsonObject:
+        return await _unwrap(
+            await active_client().post(
+                SynPanPlatformClient.PATHS["getCraft"], {"craftId": craftId}
+            )
+        )
+
     async def getCraftHistoryPage(craftId: str, pageNo: int, pageSize: int) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getCraftHistoryPage"],
+                SynPanPlatformClient.PATHS["getCraftHistoryPage"],
                 {"craftId": craftId, "pageNo": pageNo, "pageSize": pageSize},
             )
         )
 
-    @mcp.tool
     async def selectListForCanvas(workCellId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["selectListForCanvas"],
+                SynPanPlatformClient.PATHS["selectListForCanvas"],
                 {"workCellId": workCellId},
             )
         )
 
-    @mcp.tool
     async def addCraft(workCellId: str, name: str, graphData: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["addCraft"],
+                SynPanPlatformClient.PATHS["addCraft"],
                 {"workCellId": workCellId, "name": name, "graphData": graphData},
             )
         )
 
-    @mcp.tool
     async def updateCraft(
         craftId: str,
         workCellId: str,
@@ -220,7 +211,7 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
     ) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["updateCraft"],
+                SynPanPlatformClient.PATHS["updateCraft"],
                 {
                     "craftId": craftId,
                     "workCellId": workCellId,
@@ -230,16 +221,14 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
             )
         )
 
-    @mcp.tool
     async def validateCraft(graphData: str, cellId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["validate"],
+                SynPanPlatformClient.PATHS["validate"],
                 {"graphData": graphData, "cellId": cellId},
             )
         )
 
-    @mcp.tool
     async def getCraftMateriel(
         workCellId: str,
         adscriptionMateriel: Literal[1, 2] | None = None,
@@ -248,10 +237,9 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
         if adscriptionMateriel is not None:
             payload["adscriptionMateriel"] = adscriptionMateriel
         return await _unwrap(
-            await active_client().post(XingpanClient.PATHS["getCraftMateriel"], payload)
+            await active_client().post(SynPanPlatformClient.PATHS["getCraftMateriel"], payload)
         )
 
-    @mcp.tool
     async def addCraftMateriel(
         workCellId: str,
         materielName: str,
@@ -277,68 +265,62 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
         if userId is not None:
             payload["userId"] = userId
         return await _unwrap(
-            await active_client().post(XingpanClient.PATHS["addCraftMateriel"], payload)
+            await active_client().post(SynPanPlatformClient.PATHS["addCraftMateriel"], payload)
         )
 
-    @mcp.tool
     async def deleteCraftMaterielList(craftMaterielIdList: list[str]) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["deleteCraftMaterielList"],
+                SynPanPlatformClient.PATHS["deleteCraftMaterielList"],
                 {"craftMaterielIdList": craftMaterielIdList},
             )
         )
 
-    @mcp.tool
     async def getMaterielType() -> JsonObject:
-        return await _unwrap(await active_client().post(XingpanClient.PATHS["getMaterielType"], {}))
+        return await _unwrap(
+            await active_client().post(SynPanPlatformClient.PATHS["getMaterielType"], {})
+        )
 
-    @mcp.tool
     async def getAllMaterielType(workCellId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getAllMaterielType"],
+                SynPanPlatformClient.PATHS["getAllMaterielType"],
                 {"workCellId": workCellId},
             )
         )
 
-    @mcp.tool
     async def getPositionList(workCellId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getPositionList"],
+                SynPanPlatformClient.PATHS["getPositionList"],
                 {"workCellId": workCellId},
             )
         )
 
-    @mcp.tool
     async def getUnionPositionList(workCellId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getUnionPositionList"],
+                SynPanPlatformClient.PATHS["getUnionPositionList"],
                 {"workCellId": workCellId},
             )
         )
 
-    @mcp.tool
     async def getDataTypeList(workCellId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getDataTypeList"],
+                SynPanPlatformClient.PATHS["getDataTypeList"],
                 {"workCellId": workCellId},
             )
         )
 
-    @mcp.tool
     async def getLabelList(equipmentId: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getLabelList"],
+                SynPanPlatformClient.PATHS["getLabelList"],
                 {"equipmentId": equipmentId},
             )
         )
 
-    @mcp.tool
     async def getDataObjectList(
         workCellId: str,
         name: str | None = None,
@@ -350,10 +332,9 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
         if userId is not None:
             payload["userId"] = userId
         return await _unwrap(
-            await active_client().post(XingpanClient.PATHS["getDataObjectList"], payload)
+            await active_client().post(SynPanPlatformClient.PATHS["getDataObjectList"], payload)
         )
 
-    @mcp.tool
     async def addDataObject(
         workCellId: str,
         name: str,
@@ -380,10 +361,9 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
         if userId is not None:
             payload["userId"] = userId
         return await _unwrap(
-            await active_client().post(XingpanClient.PATHS["addDataObject"], payload)
+            await active_client().post(SynPanPlatformClient.PATHS["addDataObject"], payload)
         )
 
-    @mcp.tool
     async def createOrder(
         batchNo: str,
         craftId: str,
@@ -392,8 +372,10 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
         tasks: list[dict[str, Any]],
         remark: str = "",
     ) -> JsonObject:
-        client = active_client()
-        craft_response = await client.post(XingpanClient.PATHS["getCraft"], {"craftId": craftId})
+        platform_client = active_client()
+        craft_response = await platform_client.post(
+            SynPanPlatformClient.PATHS["getCraft"], {"craftId": craftId}
+        )
         if not craft_response.ok or not isinstance(craft_response.data, dict):
             return await _unwrap(craft_response)
 
@@ -402,8 +384,8 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
         craft_inputs = _dict_list(craft.get("inputs"))
         craft_outputs = _dict_list(craft.get("outputs"))
 
-        data_types_response = await client.post(
-            XingpanClient.PATHS["getDataTypeList"],
+        data_types_response = await platform_client.post(
+            SynPanPlatformClient.PATHS["getDataTypeList"],
             {"workCellId": work_cell_id},
         )
         if not data_types_response.ok:
@@ -433,13 +415,15 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
                     input_type = str(filled.get("inputType"))
                     if input_type == "data":
                         resolved = await _resolve_data_input(
-                            client,
+                            platform_client,
                             work_cell_id,
                             filled,
                             data_type_map,
                         )
                     elif input_type == "material":
-                        resolved = await _resolve_material_input(client, work_cell_id, filled)
+                        resolved = await _resolve_material_input(
+                            platform_client, work_cell_id, filled
+                        )
                     else:
                         resolved = filled
                     resolved_inputs.append(resolved)
@@ -450,7 +434,7 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
                     {**task, "inputs": resolved_inputs, "outputs": resolved_outputs}
                 )
         except ValueError as exc:
-            return XingpanResponse.error(str(exc), error_type="validation").to_tool_result()
+            return SynPanPlatformResponse.error(str(exc), error_type="validation").to_tool_result()
 
         payload = {
             "batchNo": batchNo,
@@ -460,41 +444,59 @@ def create_mcp_server(client: XingpanClient | None = None) -> FastMCP:
             "remark": remark,
             "tasks": resolved_tasks,
         }
-        return await _unwrap(await client.post(XingpanClient.PATHS["create"], payload))
+        return await _unwrap(
+            await platform_client.post(SynPanPlatformClient.PATHS["create"], payload)
+        )
 
-    @mcp.tool
     async def operateOrder(batchNo: str, operation: Literal[1, 2, 3]) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["operation"],
+                SynPanPlatformClient.PATHS["operation"],
                 {"batchNo": batchNo, "operation": operation},
             )
         )
 
-    @mcp.tool
     async def getTaskInfo(batchNo: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getTaskInfo"],
+                SynPanPlatformClient.PATHS["getTaskInfo"],
                 {"batchNo": batchNo},
             )
         )
 
-    @mcp.tool
     async def getTaskRunLog(batchNo: str) -> JsonObject:
         return await _unwrap(
             await active_client().post(
-                XingpanClient.PATHS["getTaskRunLog"],
+                SynPanPlatformClient.PATHS["getTaskRunLog"],
                 {"batchNo": batchNo},
             )
         )
 
+    mcp.tool(getWorkCellList)
+    mcp.tool(getWorkCell)
+    mcp.tool(setWorkCell)
+    mcp.tool(checkWorkCellAuthority)
+    mcp.tool(getCraftList)
+    mcp.tool(getCraft)
+    mcp.tool(getCraftHistoryPage)
+    mcp.tool(selectListForCanvas)
+    mcp.tool(addCraft)
+    mcp.tool(updateCraft)
+    mcp.tool(validateCraft)
+    mcp.tool(getCraftMateriel)
+    mcp.tool(addCraftMateriel)
+    mcp.tool(deleteCraftMaterielList)
+    mcp.tool(getMaterielType)
+    mcp.tool(getAllMaterielType)
+    mcp.tool(getPositionList)
+    mcp.tool(getUnionPositionList)
+    mcp.tool(getDataTypeList)
+    mcp.tool(getLabelList)
+    mcp.tool(getDataObjectList)
+    mcp.tool(addDataObject)
+    mcp.tool(createOrder)
+    mcp.tool(operateOrder)
+    mcp.tool(getTaskInfo)
+    mcp.tool(getTaskRunLog)
+
     return mcp
-
-
-def main() -> None:
-    create_mcp_server().run(transport="stdio", show_banner=False)
-
-
-if __name__ == "__main__":
-    main()

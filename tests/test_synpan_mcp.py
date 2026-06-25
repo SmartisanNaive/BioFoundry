@@ -9,6 +9,7 @@ from fastmcp import Client
 from typer.testing import CliRunner
 
 from biofoundry_cli.cli import cli
+from biofoundry_cli.cli.mcp import build_builtin_synpan_mcp_config, merge_builtin_mcp_configs
 from biofoundry_cli.synpan.client import SynPanClient
 from biofoundry_cli.synpan.mcp_server import create_mcp_server
 from biofoundry_cli.synpan.models import (
@@ -16,6 +17,8 @@ from biofoundry_cli.synpan.models import (
     FunctionRequest,
     SetParameter,
 )
+from biofoundry_cli.synpan.platform_client import SynPanPlatformClient
+from biofoundry_cli.synpan.platform_mcp_server import add_platform_tools
 
 
 def _json_request_body(request: httpx.Request) -> Any | None:
@@ -128,13 +131,15 @@ async def test_synpan_client_extracts_capabilities_from_info() -> None:
     response = await client.list_capabilities()
 
     assert response.ok
-    assert response.data["basic_info"]["equipmentName"] == "酶标仪"
-    assert response.data["functions"] == [{"functionName": "absorbance"}]
-    assert response.data["operations"] == [{"operationName": "reset"}]
-    assert response.data["sets"] == [{"setName": "target_temperature"}]
-    assert response.data["gets"] == [{"getName": "status"}]
-    assert response.data["nests"] == [{"nestName": "Plate1"}]
-    assert response.data["enter_and_exit"] == {"enterAndExitName": "plate_in"}
+    data = response.data
+    assert data is not None
+    assert data["basic_info"]["equipmentName"] == "酶标仪"
+    assert data["functions"] == [{"functionName": "absorbance"}]
+    assert data["operations"] == [{"operationName": "reset"}]
+    assert data["sets"] == [{"setName": "target_temperature"}]
+    assert data["gets"] == [{"getName": "status"}]
+    assert data["nests"] == [{"nestName": "Plate1"}]
+    assert data["enter_and_exit"] == {"enterAndExitName": "plate_in"}
 
 
 @pytest.mark.asyncio
@@ -214,9 +219,160 @@ async def test_synpan_mcp_server_registers_and_calls_tools() -> None:
     assert result.data["data"] == [{"getName": "status", "getValue": "idle"}]
 
 
+@pytest.mark.asyncio
+async def test_synpan_platform_client_uses_post_and_third_party_token_header() -> None:
+    calls: list[tuple[str, str, str | None, Any | None]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(
+            (
+                request.method,
+                request.url.path,
+                request.headers.get("ThirdPartyToken"),
+                _json_request_body(request),
+            )
+        )
+        return httpx.Response(200, json={"code": 200, "message": "ok", "data": {"accepted": True}})
+
+    client = SynPanPlatformClient(
+        base_url="http://platform.local/api",
+        token="token-123",
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.post(SynPanPlatformClient.PATHS["getWorkCellList"], {})
+
+    assert response.ok is True
+    assert calls == [
+        ("POST", "/api/thirdParty/mcp/getWorkCellList", "token-123", {}),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_synpan_platform_client_uses_new_env_vars() -> None:
+    calls: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, request.url.path))
+        return httpx.Response(200, json={"code": 200, "message": "ok", "data": {}})
+
+    client = SynPanPlatformClient(
+        env={
+            "SYNPAN_PLATFORM_BASE_URL": "http://new.local",
+            "SYNPAN_PLATFORM_TOKEN": "new-token",
+        },
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.post(SynPanPlatformClient.PATHS["getWorkCellList"], {})
+
+    assert response.ok is True
+    assert calls == [("POST", "/thirdParty/mcp/getWorkCellList")]
+
+
+@pytest.mark.asyncio
+async def test_synpan_platform_client_falls_back_to_xingpan_env_vars() -> None:
+    calls: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append((request.method, request.url.path))
+        return httpx.Response(200, json={"code": 200, "message": "ok", "data": {}})
+
+    client = SynPanPlatformClient(
+        env={
+            "XINGPAN_BASE_URL": "http://legacy.local",
+            "XINGPAN_TOKEN": "legacy-token",
+        },
+        transport=httpx.MockTransport(handler),
+    )
+
+    response = await client.post(SynPanPlatformClient.PATHS["getWorkCellList"], {})
+
+    assert response.ok is True
+    assert calls == [("POST", "/thirdParty/mcp/getWorkCellList")]
+
+
+@pytest.mark.asyncio
+async def test_synpan_platform_mcp_server_registers_and_calls_tools() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/thirdParty/mcp/getWorkCellList"
+        return httpx.Response(
+            200,
+            json={
+                "code": 200,
+                "message": "ok",
+                "data": [{"workCellId": "wc-1", "cellName": "cell"}],
+            },
+        )
+
+    client = SynPanPlatformClient(
+        base_url="http://platform.local",
+        token="token-123",
+        transport=httpx.MockTransport(handler),
+    )
+    server = create_mcp_server(platform_client=client)
+
+    tool_names = set(await server.get_tools())
+    assert {"getWorkCellList", "createOrder", "operateOrder", "getTaskInfo"} <= tool_names
+
+    async with Client(server) as mcp_client:
+        result = await mcp_client.call_tool("getWorkCellList", {})
+
+    assert result.data["ok"] is True
+    assert result.data["data"] == [{"workCellId": "wc-1", "cellName": "cell"}]
+
+
+@pytest.mark.asyncio
+async def test_synpan_platform_tools_can_be_added_to_a_bare_mcp() -> None:
+    from fastmcp import FastMCP
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"code": 200, "message": "ok", "data": []})
+
+    client = SynPanPlatformClient(
+        base_url="http://platform.local",
+        token="token-123",
+        transport=httpx.MockTransport(handler),
+    )
+    mcp = FastMCP("test")
+    add_platform_tools(mcp, client)
+
+    tool_names = set(await mcp.get_tools())
+    assert "getWorkCellList" in tool_names
+
+
+def test_builtin_synpan_mcp_config_points_to_cli_module() -> None:
+    config = build_builtin_synpan_mcp_config()
+
+    assert config["mcpServers"]["synpan"]["args"] == ["-m", "biofoundry_cli.cli", "synpan-mcp"]
+
+
+def test_merge_builtin_synpan_mcp_config_skips_existing_server() -> None:
+    existing = [{"mcpServers": {"synpan": {"command": "custom", "args": []}}}]
+
+    merged = merge_builtin_mcp_configs(existing)
+
+    assert merged == existing
+
+
+def test_merge_builtin_synpan_mcp_config_can_disable_default() -> None:
+    merged = merge_builtin_mcp_configs([], disable_builtin_synpan=True)
+
+    assert merged == []
+
+
 def test_synpan_mcp_cli_help() -> None:
     runner = CliRunner()
     result = runner.invoke(cli, ["synpan-mcp", "--help"])
 
     assert result.exit_code == 0
-    assert "Run the SynPan/CIAI MCP server" in result.stdout
+    assert "Run the unified SynPan MCP server" in result.stdout
+
+
+def test_xingpan_mcp_cli_command_removed() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["xingpan-mcp", "--help"])
+
+    assert result.exit_code != 0
+    output = result.stdout + result.stderr
+    assert "No such command" in output or "Missing command" in output

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 type JsonObject = dict[str, Any]
 
 
-class XingpanResponse(BaseModel):
+class SynPanPlatformResponse(BaseModel):
     ok: bool
     http_status: int | None = None
     code: str | None = None
@@ -29,7 +29,7 @@ class XingpanResponse(BaseModel):
         code: str | None = None,
         raw: Any | None = None,
         data: Any | None = None,
-    ) -> XingpanResponse:
+    ) -> SynPanPlatformResponse:
         return cls(
             ok=False,
             http_status=http_status,
@@ -39,4 +39,3 @@ class XingpanResponse(BaseModel):
             raw=raw,
             error_type=error_type,
         )
-

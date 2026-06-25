@@ -81,12 +81,12 @@ def _parse_key_value_pairs(
 Transport = Literal["stdio", "http"]
 
 
-def build_builtin_xingpan_mcp_config() -> dict[str, Any]:
+def build_builtin_synpan_mcp_config() -> dict[str, Any]:
     return {
         "mcpServers": {
-            "xingpan": {
+            "synpan": {
                 "command": sys.executable,
-                "args": ["-m", "biofoundry_cli.cli", "xingpan-mcp"],
+                "args": ["-m", "biofoundry_cli.cli", "synpan-mcp"],
             }
         }
     }
@@ -94,21 +94,21 @@ def build_builtin_xingpan_mcp_config() -> dict[str, Any]:
 
 def merge_builtin_mcp_configs(
     mcp_configs: list[dict[str, Any]], *,
-    disable_builtin_xingpan: bool = False,
+    disable_builtin_synpan: bool = False,
 ) -> list[dict[str, Any]]:
-    if disable_builtin_xingpan:
+    if disable_builtin_synpan:
         return mcp_configs
 
-    has_xingpan = False
+    has_synpan = False
     for config in mcp_configs:
         servers = config.get("mcpServers", {})
-        if isinstance(servers, dict) and "xingpan" in servers:
-            has_xingpan = True
+        if isinstance(servers, dict) and "synpan" in servers:
+            has_synpan = True
             break
 
-    if has_xingpan:
+    if has_synpan:
         return mcp_configs
-    return [*mcp_configs, build_builtin_xingpan_mcp_config()]
+    return [*mcp_configs, build_builtin_synpan_mcp_config()]
 
 
 @cli.command(

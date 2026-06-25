@@ -276,11 +276,11 @@ def biofoundry(
             help="Path to the skills directory. Overrides discovery.",
         ),
     ] = None,
-    no_xingpan_mcp: Annotated[
+    no_synpan_mcp: Annotated[
         bool,
         typer.Option(
-            "--no-xingpan-mcp",
-            help="Disable the built-in Xingpan MCP server auto-loading.",
+            "--no-synpan-mcp",
+            help="Disable the built-in SynPan MCP server auto-loading.",
         ),
     ] = False,
     # Loop control
@@ -465,7 +465,7 @@ def biofoundry(
 
     mcp_configs = merge_builtin_mcp_configs(
         mcp_configs,
-        disable_builtin_xingpan=no_xingpan_mcp,
+        disable_builtin_synpan=no_synpan_mcp,
     )
 
     skills_dir: FoundryPath | None = None
@@ -658,16 +658,8 @@ def acp():
 
 @cli.command("synpan-mcp")
 def synpan_mcp():
-    """Run the SynPan/CIAI MCP server on stdio."""
+    """Run the unified SynPan MCP server on stdio."""
     from biofoundry_cli.synpan.mcp_server import main
-
-    main()
-
-
-@cli.command("xingpan-mcp")
-def xingpan_mcp():
-    """Run the Xingpan MCP server on stdio."""
-    from biofoundry_cli.xingpan.mcp_server import main
 
     main()
 
