@@ -10,6 +10,7 @@ All notable changes to written project materials (documentation, READMEs, user-f
 - Added `README.en.md` as the English translation.
 - Simplified `README_zh.md` to a redirect pointing to `README.md` and `README.en.md`.
 - Updated project READMEs to reflect the current feature set: Sanger sequencing analysis, unified `synpan` module (merged from `xingpan`), built-in MCP services, bundled Biofoundry skills, and multi-mode CLI usage.
+- Expanded the Agent capability sections in `README.md` and `README.en.md` to explain the understand → plan → act → report loop, approval behavior, runtime modes, and biofoundry-specific tools.
 
 ## 2026-06-25
 

@@ -2,7 +2,7 @@
 
 中文 | [English](./README.en.md)
 
-Biofoundry_CLI 是一个面向生物制造与合成生物学场景的终端优先型软件工程 Agent。它可以读取和编辑代码、执行 shell 命令、调用 MCP 服务器，并支持交互式 shell、print、ACP 和 wire 多种模式。
+Biofoundry_CLI 是一个面向生物制造与合成生物学场景的终端优先型软件工程 Agent。它以大语言模型为决策核心，能够在获得用户授权后自主调用工具完成复杂任务：读取和编辑代码、执行 shell 命令、检索网络信息、接入 MCP 服务器，并支持交互式 shell、print、ACP 和 wire 多种运行模式。
 
 ## 快速开始
 
@@ -106,16 +106,28 @@ api_key = ""
 - shell 模式中可用 `/model` 切换已配置模型。
 - CLI 不再内置 `/login` 或账号登录流程。
 
-## 核心能力
+## Agent 能力
 
-- **代码读写与编辑**：读取文本文件、批量修改、Diff 审查。
-- **Shell 执行**：在终端中运行命令并解析输出。
-- **Web 搜索与抓取**：内置搜索与 URL 抓取工具。
-- **MCP 服务器**：可接入外部 MCP server；也内置 `biofoundry synpan-mcp` 作为 stdio MCP 服务，默认自动加载，可用 `--no-synpan-mcp` 关闭。
-- **多模式运行**：interactive shell、print、ACP、wire。
-- **内置 Skills 与领域知识**：`Knowledge/` 目录下随附 Biofoundry 相关 skills，支持自动发现。
-- **Sanger 测序分析**：`biofoundry_cli.tools.sanger.SangerAlign` 工具，用于序列比对和预期突变校验。
-- **SynPan 设备驱动与平台接入**：统一在 `biofoundry_cli.synpan` 下，同时支持 CIAI 设备端点（`/Info`、`/Function`、`/Set` 等）和第三方工艺平台端点（workcell、craft、materiel、data、order）。
+Biofoundry_CLI 的 Agent 能力围绕「理解任务 → 规划步骤 → 调用工具 → 反馈结果」的闭环展开：
+
+- **自主任务执行**：在 shell 模式下，用户用自然语言描述目标后，Agent 会自行拆解步骤、选择工具并执行，必要时向用户确认关键操作（如写文件、执行高风险命令）。
+- **代码工程**：读取、搜索、创建和修改项目中的文本文件；支持 Diff 审查、批量替换和代码片段级编辑。
+- **Shell 与系统交互**：在受控环境中运行 shell 命令，解析输出并据此决定下一步动作。
+- **信息检索**：通过内置 Web 搜索和 URL 抓取获取最新资料，辅助文献调研、API 文档查询等。
+- **MCP 生态**：可接入外部 MCP server 扩展工具集；同时内置 `biofoundry synpan-mcp` stdio MCP 服务，默认自动加载，可用 `--no-synpan-mcp` 关闭。
+- **多模式运行**：
+  - `shell`：交互式对话，适合迭代式开发。
+  - `print`：非交互式，直接输出结果，适合脚本化调用。
+  - `ACP`：Agent Client Protocol 模式，供外部客户端调用。
+  - `wire`：面向 UI 集成的流式事件模式。
+- **规划与子代理**：支持进入 plan 模式对复杂任务做分步设计，也能委派子代理处理专项任务。
+- **Skills 与领域知识**：自动发现 `Knowledge/` 和本地 skills 目录中的能力包；随附生物制造相关的数据分析、协议解析、序列处理等 skills。
+- **会话持久化**：运行状态、上下文和历史记录保存在 `.biofoundry/` 中，支持跨会话恢复。
+
+### 生物制造专项能力
+
+- **Sanger 测序分析**：`biofoundry_cli.tools.sanger.SangerAlign` 用于序列比对、差异识别和预期突变校验。
+- **SynPan 设备驱动与平台接入**：统一在 `biofoundry_cli.synpan` 下，同时支持 CIAI 设备端点（`/Info`、`/Function`、`/Set` 等）和第三方工艺平台端点（workcell、craft、materiel、data、order），可用于实验设备控制与工艺订单管理。
 
 ## 常用命令
 

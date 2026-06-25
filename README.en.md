@@ -2,7 +2,7 @@
 
 [中文](./README.md) | English
 
-Biofoundry_CLI is a terminal-first software engineering agent for biofoundry and synthetic biology workflows. It can read and edit code, run shell commands, talk to MCP servers, and operate in interactive shell, print, ACP, and wire modes.
+Biofoundry_CLI is a terminal-first software engineering agent for biofoundry and synthetic biology workflows. Powered by a large language model as its decision core, it can autonomously invoke tools—after user authorization—to complete complex tasks: read and edit code, run shell commands, retrieve information from the web, connect to MCP servers, and operate in interactive shell, print, ACP, and wire modes.
 
 ## Quick Start
 
@@ -106,16 +106,28 @@ Notes:
 - Use `/model` in shell mode to switch between configured models.
 - The CLI no longer includes a built-in `/login` or account login flow.
 
-## Core Capabilities
+## Agent Capabilities
 
-- **Code read/write/edit**: read text files, make edits, review diffs.
-- **Shell execution**: run commands in the terminal and parse output.
-- **Web search and fetch**: built-in search and URL fetching tools.
-- **MCP servers**: connect to external MCP servers; also ships a built-in `biofoundry synpan-mcp` stdio MCP service that auto-loads by default unless disabled with `--no-synpan-mcp`.
-- **Multiple runtime modes**: interactive shell, print, ACP, wire.
-- **Bundled skills and domain knowledge**: Biofoundry-related skills under `Knowledge/` with automatic discovery.
-- **Sanger sequencing analysis**: `biofoundry_cli.tools.sanger.SangerAlign` for sequence alignment and expected-mutation validation.
-- **SynPan device driver and platform integration**: unified under `biofoundry_cli.synpan`, supporting both CIAI device endpoints (`/Info`, `/Function`, `/Set`, etc.) and third-party craft-platform endpoints (workcell, craft, materiel, data, order).
+Biofoundry_CLI's agent capabilities revolve around a closed loop of **understand → plan → act → report**:
+
+- **Autonomous task execution**: In shell mode, describe a goal in natural language and the agent breaks it into steps, picks tools, and executes them, asking for approval on critical actions (e.g., writing files or running high-risk commands).
+- **Code engineering**: read, search, create, and modify text files in a project; supports diff review, batch replacement, and snippet-level edits.
+- **Shell and system interaction**: run shell commands in a controlled environment, parse their output, and decide the next step.
+- **Information retrieval**: use built-in web search and URL fetching to gather up-to-date information for literature surveys, API doc lookups, etc.
+- **MCP ecosystem**: connect to external MCP servers to extend the toolset; also ships a built-in `biofoundry synpan-mcp` stdio MCP service that auto-loads by default unless disabled with `--no-synpan-mcp`.
+- **Multiple runtime modes**:
+  - `shell`: interactive conversation for iterative development.
+  - `print`: non-interactive, result-only output for scripted use.
+  - `ACP`: Agent Client Protocol mode for external clients.
+  - `wire`: streaming event mode for UI integration.
+- **Planning and subagents**: enter plan mode to design multi-step tasks, and delegate to subagents for specialized work.
+- **Skills and domain knowledge**: automatically discover capability packs in `Knowledge/` and local skills directories; includes bundled skills for bio-manufacturing data analysis, protocol parsing, and sequence processing.
+- **Session persistence**: runtime state, context, and history are saved under `.biofoundry/` and can be restored across sessions.
+
+### Biofoundry-specific capabilities
+
+- **Sanger sequencing analysis**: `biofoundry_cli.tools.sanger.SangerAlign` for sequence alignment, difference detection, and expected-mutation validation.
+- **SynPan device driver and platform integration**: unified under `biofoundry_cli.synpan`, supporting both CIAI device endpoints (`/Info`, `/Function`, `/Set`, etc.) and third-party craft-platform endpoints (workcell, craft, materiel, data, order) for lab equipment control and process order management.
 
 ## Common Commands
 
