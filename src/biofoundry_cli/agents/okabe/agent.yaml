@@ -16,3 +16,4 @@ agent:
     - "biofoundry_cli.tools.file:StrReplaceFile"
     - "biofoundry_cli.tools.web:SearchWeb"
     - "biofoundry_cli.tools.web:FetchURL"
+    - "biofoundry_cli.tools.sanger:SangerAlign"

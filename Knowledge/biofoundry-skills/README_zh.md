@@ -78,6 +78,12 @@
 - **`design_pathway`**：为目标分子设计通路方案。
 - **`optimize_enzymes`**：选择和改造酶以提高通路效率。
 
+## 13. Sanger 测序分析 (`sanger-sequencing-analysis`)
+
+**目的：** 将 Sanger consensus 读段与参考 DNA 比对，用于克隆验证。
+- **`SangerAlign`**：将 `.seq`、FASTA 或粘贴的 Sanger 序列比对到参考序列。
+- **突变检查**：确认覆盖区域内的预期 SNP、插入和缺失。
+
 ## 使用方法
 
 每个 skill 都是一个独立的目录，包含定义工具的 `SKILL.md` 文件和包含实现逻辑的 `scripts/` 目录。这些 skills 旨在供 AI 代理使用，以在生物铸造厂环境中自主规划和执行实验。
@@ -106,6 +112,7 @@ ln -s ../../biofoundry-skills/skills/epistasis-analysis .claude/skills/epistasis
 ln -s ../../biofoundry-skills/skills/lcms-analysis .claude/skills/lcms-analysis
 ln -s ../../biofoundry-skills/skills/momentum-workflow .claude/skills/momentum-workflow
 ln -s ../../biofoundry-skills/skills/pathway-engineering .claude/skills/pathway-engineering
+ln -s ../../biofoundry-skills/skills/sanger-sequencing-analysis .claude/skills/sanger-sequencing-analysis
 ```
 
 完成后，Claude Code 会根据任务自动发现并按需加载这些 skills。

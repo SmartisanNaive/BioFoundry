@@ -42,6 +42,7 @@ async def test_discover_skills_from_embedded_roots(tmp_path: Path) -> None:
 
     assert "sequence-space-parser" in skill_names
     assert "dna-assembly" in skill_names
+    assert "sanger-sequencing-analysis" in skill_names
     assert "fluent-protocol" in skill_names
 
 

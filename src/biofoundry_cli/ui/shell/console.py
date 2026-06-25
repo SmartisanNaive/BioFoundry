@@ -5,10 +5,10 @@ from rich.theme import Theme
 
 NEUTRAL_MARKDOWN_THEME = Theme(
     {
-        "markdown.paragraph": "#e8fff8",
+        "markdown.paragraph": "black",
         "markdown.block_quote": "grey62 italic",
         "markdown.hr": "#31545a",
-        "markdown.item": "#e8fff8",
+        "markdown.item": "black",
         "markdown.item.bullet": "#57e3d0",
         "markdown.item.number": "#57e3d0",
         "markdown.link": "underline #57e3d0",

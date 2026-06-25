@@ -78,6 +78,12 @@ These skills correspond to the four core modules of the agent system:
 - **`design_pathway`**: Design pathway schemes for target molecules.
 - **`optimize_enzymes`**: Select and engineer enzymes to improve pathway efficiency.
 
+## 13. Sanger Sequencing Analysis (`sanger-sequencing-analysis`)
+
+**Purpose:** Compare Sanger consensus reads against reference DNA for clone validation.
+- **`SangerAlign`**: Align `.seq`, FASTA, or pasted Sanger reads to a reference sequence.
+- **Mutation checks**: Confirm expected SNPs, insertions, and deletions in covered regions.
+
 ## Usage
 
 Each skill is a standalone directory containing a `SKILL.md` file that defines the tool and a `scripts/` directory containing the implementation logic. These skills are designed for AI agents to autonomously plan and execute experiments in a biofoundry environment.
@@ -98,4 +104,5 @@ ln -s ../../biofoundry-skills/skills/sequence-space-parser .claude/skills/sequen
 ln -s ../../biofoundry-skills/skills/phenotype-tensor-processor .claude/skills/phenotype-tensor-processor
 ln -s ../../biofoundry-skills/skills/hypothesis-generation-network .claude/skills/hypothesis-generation-network
 ln -s ../../biofoundry-skills/skills/biofilm-microscopy .claude/skills/biofilm-microscopy
+ln -s ../../biofoundry-skills/skills/sanger-sequencing-analysis .claude/skills/sanger-sequencing-analysis
 ```

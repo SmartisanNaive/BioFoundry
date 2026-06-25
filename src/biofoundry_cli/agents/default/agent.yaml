@@ -20,6 +20,7 @@ agent:
     - "biofoundry_cli.tools.file:StrReplaceFile"
     - "biofoundry_cli.tools.web:SearchWeb"
     - "biofoundry_cli.tools.web:FetchURL"
+    - "biofoundry_cli.tools.sanger:SangerAlign"
     - "biofoundry_cli.tools.plan:ExitPlanMode"
     - "biofoundry_cli.tools.plan.enter:EnterPlanMode"
   subagents:
